@@ -37,14 +37,23 @@ def printf(Matrix):
     for i in range(4):
         for j in range(4):
             print(integer(Matrix[i][j]),end=" ")
-        print("\n")
-    print("-----------------")
+        if(i!=3):
+            print("\n")
+    print("\n-----------------")
 def rotate(row, places, direction):
     n = len(row)
     if direction == 1:  # Rotate left
         return row[places % n:] + row[:places % n]
     elif direction == -1:  # Rotate right
         return row[-places % n:] + row[:-places % n]
+def xor(arr1,arr2):
+    temp=[]
+    for i in range(len(arr1)):
+        if((arr1[i]==0 and arr2[i]==0) or (arr1[i]==1 and arr2[i]==1)):
+            temp.append(0)
+        else:
+            temp.append(1)
+    return(temp)
 def matrixsplitter(C):
     tempMatrix=[]
     for i in range(16):
@@ -113,32 +122,45 @@ def invsubbytes(S):
         for j in range(8):
             T[8*i+j] = A[j]
     return(T)
-def Encrypt(P,n):
-    if(n!=0):
-        C = subbytes(P)
-        C1= Shiftrows(matrixsplitter(C))
-        C2= Shiftcolumns(C1)
-        return(Encrypt(matrixcombiner(C2),n-1))
-    else:
-        return(P)
-def Decrypt(C,n):
-    if (n!=0):
-        C1= InverseShiftcolumns(matrixsplitter(C))
-        C2= InverseShiftrows(C1)
-        C3 = invsubbytes(matrixcombiner(C2))
-        return(Decrypt(C3,n-1))
-    else:
-        return(C)
-        
+def Encrypt(P):
+    C = subbytes(P)
+    C1= Shiftrows(matrixsplitter(C))
+    C2= Shiftcolumns(C1)
+    return(matrixcombiner(C2))
+def Decrypt(C):
+    C1= InverseShiftcolumns(matrixsplitter(C))
+    C2= InverseShiftrows(C1)
+    C3 = invsubbytes(matrixcombiner(C2))
+    return(C3)
 Plain_Text = [random.randint(0,1) for i in range(128)]
+Original=Plain_Text
+Key = [random.randint(0,1) for i in range(128)]
+Cipher=[]
+Round_Key=[]
+print("Plain Text")
 printf(matrixsplitter(Plain_Text))
-Cipher=Encrypt(Plain_Text,20)
+for i in range(10):
+    Cipher=Encrypt(Plain_Text)
+    Round_Key=Encrypt(Key)
+    Cipher=xor(Cipher,Round_Key)
+    Plain_Text=Cipher
+    Key=Round_Key
+
+print("Cipher Text")
 printf(matrixsplitter(Cipher))
-Decrypted_Text=Decrypt(Cipher,20)
-printf(matrixsplitter(Decrypted_Text))
+
+for i in range(10):
+    Decrypted_Text=xor(Cipher,Round_Key)
+    Decrypted_Text=Decrypt(Decrypted_Text)
+    Round_Key=Decrypt(Key)
+    Cipher=Decrypted_Text
+    Key=Round_Key
+
+print("Decrypted Text")
+printf(matrixsplitter(Cipher))
 flag=0
 for i in range(128):
-    if(Plain_Text[i] != Decrypted_Text[i]):
+    if(Original[i] != Cipher[i]):
         flag+=1
         break
 if(flag!=0):
